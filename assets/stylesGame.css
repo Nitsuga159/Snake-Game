@@ -1,0 +1,65 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color:rgb(50, 119, 122);
+}
+
+.area {
+  overflow: hidden;
+  border: 2px solid silver;
+  border-radius: 10px;
+  box-shadow: 5px 5px 2px 3px rgb(34, 34, 34);
+}
+
+.head {
+  box-shadow: 0px 0px 10px 3px rgb(186, 13, 13);
+  z-index: 99;
+}
+
+.head::before {
+  content: '';
+  position: absolute;
+  border: 5px solid rgb(0, 0, 0);
+  outline: 5px solid rgb(255, 255, 255);
+  border-radius: 50%;
+  top: calc(65% - 10px);
+  left: calc(65% - 10px);
+}
+
+.area > div {
+  border-radius: 40%;
+  position: absolute;
+  transition: all .2s ease;
+  animation: aparecer .5s ease;
+}
+
+@keyframes aparecer {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.game-over {
+  width: 300px;
+  height: 50px;
+  font-size: 1.5rem;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.801);
+  padding: 10px;
+  border-radius: 10px;
+  position: absolute;
+  top: calc(0% + 30px);
+  left: calc(0% + 30px);
+}
