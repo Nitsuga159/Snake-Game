@@ -58,6 +58,7 @@ export default function (sizeOfBoard, size, move) {
   const gameOver = (interval, theWinner) => {
     clearInterval(interval);
     setPositions(positions, size);
+    d.removeEventListener("keydown", choiceDirection);
     snake = [];
     direction = RIGHT;
     const $gameOver = d.createElement("p");
@@ -97,9 +98,6 @@ export default function (sizeOfBoard, size, move) {
 
       d.addEventListener("keydown", choiceDirection);
 
-      let headLeft = +snake[0].style.left.slice(0, -2),
-        headTop = +snake[0].style.top.slice(0, -2);
-
       for (let cube of snake.slice(1)) {
         cube = cube.style;
         let aux2 = [cube.top, cube.left],
@@ -113,13 +111,15 @@ export default function (sizeOfBoard, size, move) {
         aux1 = aux2;
       }
 
+      let headLeft = +snake[0].style.left.slice(0, -2),
+        headTop = +snake[0].style.top.slice(0, -2);
+
       if (headTop < 0 || headTop > sizeOfBoard - size)
         return gameOver(interval);
       if (headLeft < 0 || headLeft > sizeOfBoard - size)
         return gameOver(interval);
-
-      let colision = false;
-      if (positions[headTop / size][headLeft / size] === false) colision = true;
+      if (positions[headTop / size][headLeft / size] === false)
+        return gameOver(interval);
 
       positions[headTop / size][headLeft / size] = false;
 
@@ -131,7 +131,6 @@ export default function (sizeOfBoard, size, move) {
       checkFood(snake, $food, $board, positions, headTop, headLeft, size);
 
       snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
-      colision && gameOver(interval);
     }, delay);
   };
 
