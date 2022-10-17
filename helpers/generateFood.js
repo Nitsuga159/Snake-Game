@@ -1,15 +1,19 @@
 import makeLink from "./makeLink.js";
 
-export default function (positions, sizeOfBoard, size, move) {
-  let top,
-    left,
-    count = 0;
+export default function (positions, size) {
+  let top, left;
 
-  do {
-    top = Math.round((Math.random() * (sizeOfBoard - size)) / move) * move;
-    left = Math.round((Math.random() * (sizeOfBoard - size)) / move) * move;
-    console.log(count++);
-  } while (positions[`${top}px${left}px`]);
+  let filerPositions = [];
+
+  positions.forEach(
+    (arr) =>
+      (filerPositions = [...filerPositions, ...arr.filter((item) => item)])
+  );
+
+  [top, left] =
+    filerPositions[Math.floor(Math.random() * filerPositions.length)].split(
+      "-"
+    );
 
   const $food = makeLink(size, top, left, "blue");
   $food.id = "food";

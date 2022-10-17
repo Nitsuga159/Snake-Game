@@ -1,4 +1,4 @@
-import makeLink from "./helpers/makeLink.js";
+import makeLink from "./makeLink.js";
 
 export default function ($board, snake, size, move) {
   $board.innerHTML = "";

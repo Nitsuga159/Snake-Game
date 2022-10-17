@@ -3,6 +3,7 @@ export default function (size, top, left, color, addClass) {
   s.style.width = `${size}px`;
   s.style.height = `${size}px`;
   s.style.backgroundColor = color;
+  s.style.position = "absolute";
   s.style.top = `${top}px`;
   s.style.left = `${left}px`;
 
