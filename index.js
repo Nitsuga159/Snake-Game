@@ -15,5 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     false
   );
 
-  App(700, 35, 35);
+  if (window.innerWidth > 400) App(700, 35, 35);
+  else App(200, 20, 20);
 });
