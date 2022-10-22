@@ -2,7 +2,7 @@ import checkFood from "./helpers/checkFood.js";
 import initializeGame from "./helpers/initializeGame.js";
 import setPositions from "./helpers/setPositions.js";
 
-export default function (sizeOfBoard, size, move) {
+export default function (sizeOfBoard, size, move, event) {
   // CREAMOS UNA CONSTANTE D QUE GUARDA UNA REFERENCIA DE DOCUMENT (POR COMODIDAD)
   // TRAEMOS EL TABLERO DEL DOM
   const d = document,
@@ -32,8 +32,8 @@ export default function (sizeOfBoard, size, move) {
 
   setPositions(positions, size);
 
-  const choiceDirection = (e) => {
-    d.removeEventListener("keydown", choiceDirection);
+  const choiceDirectionDesktop = (e) => {
+    d.removeEventListener(event, choiceDirectionDesktop);
 
     if (e.key === "ArrowLeft" && direction !== RIGHT) return (direction = LEFT);
 
@@ -45,20 +45,56 @@ export default function (sizeOfBoard, size, move) {
     if (e.key === "ArrowDown" && direction !== UP) return (direction = DOWN);
   };
 
-  const startGame = (e) => {
+  const choiceDirectionMobile = ({ target }) => {
+    d.removeEventListener(event, choiceDirectionMobile);
+
+    if (target.matches(".arrow-left") && direction !== RIGHT)
+      return (direction = LEFT);
+
+    if (target.matches(".arrow-up") && direction !== DOWN)
+      return (direction = UP);
+
+    if (target.matches(".arrow-right") && direction !== LEFT)
+      return (direction = RIGHT);
+
+    if (target.matches(".arrow-down") && direction !== UP)
+      return (direction = DOWN);
+  };
+
+  const startGameDesktop = (e) => {
     if (e.key === " ") {
       initializeGame($board, snake, size, move);
       game();
       d.querySelector(".score").textContent = 0;
-      d.addEventListener("keydown", choiceDirection);
-      d.removeEventListener("keydown", startGame);
+
+      event === "keydown"
+        ? d.addEventListener("keydown", choiceDirectionDesktop)
+        : d.addEventListener("click", choiceDirectionMobile);
+
+      d.removeEventListener("keydown", startGameDesktop);
+    }
+  };
+
+  const startGameMobile = (e) => {
+    if (e.target.matches(".start")) {
+      initializeGame($board, snake, size, move);
+      game();
+      d.querySelector(".score").textContent = 0;
+
+      event === "keydown"
+        ? d.addEventListener("keydown", choiceDirectionDesktop)
+        : d.addEventListener("click", choiceDirectionMobile);
+
+      d.removeEventListener("click", startGameMobile);
     }
   };
 
   const gameOver = (interval, theWinner) => {
     clearInterval(interval);
     setPositions(positions, size);
-    d.removeEventListener("keydown", choiceDirection);
+    event === "keydown"
+      ? d.removeEventListener("keydown", choiceDirectionDesktop)
+      : d.removeEventListener("click", choiceDirectionMobile);
     snake = [];
     direction = RIGHT;
     const $gameOver = d.createElement("p");
@@ -70,7 +106,9 @@ export default function (sizeOfBoard, size, move) {
     if (theWinner) $gameOver.textContent = "YOU'RE GOD";
     $board.appendChild($gameOver);
 
-    d.addEventListener("keydown", startGame);
+    event === "keydown"
+      ? d.addEventListener("keydown", startGameDesktop)
+      : d.addEventListener("click", startGameMobile);
   };
 
   const game = () => {
@@ -96,7 +134,9 @@ export default function (sizeOfBoard, size, move) {
           break;
       }
 
-      d.addEventListener("keydown", choiceDirection);
+      event === "keydown"
+        ? d.addEventListener("keydown", choiceDirectionDesktop)
+        : d.addEventListener("click", choiceDirectionMobile);
 
       for (let cube of snake.slice(1)) {
         cube = cube.style;
@@ -143,5 +183,7 @@ export default function (sizeOfBoard, size, move) {
     delay = +$select.value;
   });
 
-  d.addEventListener("keydown", startGame);
+  event === "keydown"
+    ? d.addEventListener("keydown", startGameDesktop)
+    : d.addEventListener("click", startGameMobile);
 }

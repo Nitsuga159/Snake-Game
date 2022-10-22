@@ -1,0 +1,25 @@
+.buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.buttons img {
+  cursor: pointer;
+  user-select: none;
+  filter: opacity(0.7) drop-shadow(2px 2px black)
+}
+
+.arrow-up {
+  transform: rotate(180deg)
+}
+
+.arrow-left {
+  transform: rotate(90deg)
+}
+
+.arrow-right {
+  transform: rotate(-90deg)
+}

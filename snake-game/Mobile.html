@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Source+Sans+Pro:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/stylesMobile/general.css">
+  <link rel="stylesheet" href="../assets/stylesMobile/stylesGames.css">
+  <link rel="stylesheet" href="../assets/stylesMobile/buttons.css">
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      <h3>Snake Game</h3>
+      <button class="start">START</button>
+      <h3>Score</h3>
+        <p class="score">0</p>
+    </div>
+    <div class="container-game">
+      <div class="area"></div>
+    </div>
+    <div class="buttons">
+      <img class="arrow-up" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/AP+gvaeTAAABaElEQVRoge2YW07CQBhGT2JSXQR4W4mJ98t+BAXf2IsoCupevOEmjMIrPtQxRPs7Le3MP03mJP8TL+drOElTiEQikUgk5QGY1eTuswasAZMA5Gw3BTaN9NLcgHcgAbay1gVEDxhJPy4DL+g/ZenegBXbwv0ARKU7sckb7gKQ/X3i3yaLVeAzAGlzU2CjyACAiwDEzXWLykM4QecKVyKEoI8XlTeMFOWHZeVBL+iFwpXoKgzoVCUP6SvGs0f5MSXCldjzOOCoannD0IP8rSt5cB90peFKdBwOOHctD+6CdhKuxK6DAc7ClbipSHwGDDy7A9CkmqAnwLpn9x/Ocgjaru3deo6yQY9JX9tVKRP0oYJvJgOKy1+rmAo0gQ9qEq5Em/wDWkqO/5IAT9jlXwkgXIkd7AMO1OxycoUs31f0yk2D7KAnpF/Aa0GLvwNOVY0KkgCP1CRciW1qFK5EH7jUlihD4/sikVD5AnLf+9HRYPEOAAAAAElFTkSuQmCC">
+      <div class="sub-buttons">
+        <img class="arrow-left" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/AP+gvaeTAAABaElEQVRoge2YW07CQBhGT2JSXQR4W4mJ98t+BAXf2IsoCupevOEmjMIrPtQxRPs7Le3MP03mJP8TL+drOElTiEQikUgk5QGY1eTuswasAZMA5Gw3BTaN9NLcgHcgAbay1gVEDxhJPy4DL+g/ZenegBXbwv0ARKU7sckb7gKQ/X3i3yaLVeAzAGlzU2CjyACAiwDEzXWLykM4QecKVyKEoI8XlTeMFOWHZeVBL+iFwpXoKgzoVCUP6SvGs0f5MSXCldjzOOCoannD0IP8rSt5cB90peFKdBwOOHctD+6CdhKuxK6DAc7ClbipSHwGDDy7A9CkmqAnwLpn9x/Ocgjaru3deo6yQY9JX9tVKRP0oYJvJgOKy1+rmAo0gQ9qEq5Em/wDWkqO/5IAT9jlXwkgXIkd7AMO1OxycoUs31f0yk2D7KAnpF/Aa0GLvwNOVY0KkgCP1CRciW1qFK5EH7jUlihD4/sikVD5AnLf+9HRYPEOAAAAAElFTkSuQmCC">
+        <img class="arrow-down" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/AP+gvaeTAAABaElEQVRoge2YW07CQBhGT2JSXQR4W4mJ98t+BAXf2IsoCupevOEmjMIrPtQxRPs7Le3MP03mJP8TL+drOElTiEQikUgk5QGY1eTuswasAZMA5Gw3BTaN9NLcgHcgAbay1gVEDxhJPy4DL+g/ZenegBXbwv0ARKU7sckb7gKQ/X3i3yaLVeAzAGlzU2CjyACAiwDEzXWLykM4QecKVyKEoI8XlTeMFOWHZeVBL+iFwpXoKgzoVCUP6SvGs0f5MSXCldjzOOCoannD0IP8rSt5cB90peFKdBwOOHctD+6CdhKuxK6DAc7ClbipSHwGDDy7A9CkmqAnwLpn9x/Ocgjaru3deo6yQY9JX9tVKRP0oYJvJgOKy1+rmAo0gQ9qEq5Em/wDWkqO/5IAT9jlXwkgXIkd7AMO1OxycoUs31f0yk2D7KAnpF/Aa0GLvwNOVY0KkgCP1CRciW1qFK5EH7jUlihD4/sikVD5AnLf+9HRYPEOAAAAAElFTkSuQmCC">
+        <img class="arrow-right" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/AP+gvaeTAAABaElEQVRoge2YW07CQBhGT2JSXQR4W4mJ98t+BAXf2IsoCupevOEmjMIrPtQxRPs7Le3MP03mJP8TL+drOElTiEQikUgk5QGY1eTuswasAZMA5Gw3BTaN9NLcgHcgAbay1gVEDxhJPy4DL+g/ZenegBXbwv0ARKU7sckb7gKQ/X3i3yaLVeAzAGlzU2CjyACAiwDEzXWLykM4QecKVyKEoI8XlTeMFOWHZeVBL+iFwpXoKgzoVCUP6SvGs0f5MSXCldjzOOCoannD0IP8rSt5cB90peFKdBwOOHctD+6CdhKuxK6DAc7ClbipSHwGDDy7A9CkmqAnwLpn9x/Ocgjaru3deo6yQY9JX9tVKRP0oYJvJgOKy1+rmAo0gQ9qEq5Em/wDWkqO/5IAT9jlXwkgXIkd7AMO1OxycoUs31f0yk2D7KAnpF/Aa0GLvwNOVY0KkgCP1CRciW1qFK5EH7jUlihD4/sikVD5AnLf+9HRYPEOAAAAAElFTkSuQmCC">
+      </div>
+    </div>
+    <select id="select">
+      <option value="" disabled=true>Choice Mobility</option>
+      <option value="100">Normal</option>
+      <option value="85">Difficult</option>
+      <option value="70">God</option>
+    </select>
+  </div>
+  <nav class="links">
+    <a href="https://www.instagram.com/agusromero159/" target="_blank"><img src="../assets/icons/instagram.svg" alt="instagram" /> Instagram</a>
+    <a href="https://github.com/Nitsuga159/Snake-Game" target="_blank"><img src="../assets/icons/github.svg" alt="github" /> Repositorio</a>
+  </nav>
+  <script src="../index.js" type="module"></script>
+</body>
+</html>

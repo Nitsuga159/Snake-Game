@@ -1,3 +1,19 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background:linear-gradient(15deg, rgb(50, 119, 122), rgb(94, 198, 203));
+  overflow-x: hidden;
+}
+
 .container {
   font-family: 'Press Start 2P', cursive;
   position: relative;
@@ -5,7 +21,7 @@
   grid-template-columns: 35% 1fr;
   align-items: center;
   max-width: 1400px;
-  height: 800px;
+  min-height: 800px;
   margin-top: 20px;
   padding: 20px;
   border-radius: 35px;
@@ -104,4 +120,30 @@
   top: calc(0% + 20px);
   color: white;
   background-color: rgb(26, 25, 25);
+}
+
+@media screen and (max-width: 1200px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .start, .controls * {
+    font-size: 1rem;
+  }
+
+  .title {
+    font-size: 1.7rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .title * {
+    margin: 20px;
+  }
+
+  .area {
+    margin: 40px 0;
+  }
+
 }
