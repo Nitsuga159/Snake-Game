@@ -1,8 +1,8 @@
 import App from "./App.js";
 
-const URL_DESKTOP = "/snake-game/Desktop.html";
+const URL_DESKTOP = "/Snake-Game/snake-game/Desktop.html";
 
-const URL_MOBILE = "/snake-game/Mobile.html";
+const URL_MOBILE = "/Snake-Game/snake-game/Desktop.html";
 
 const w = window;
 
