@@ -1,10 +1,12 @@
 import App from "./App.js";
 
-const URL_DESKTOP = "/snake-game/desktop";
+const URL_DESKTOP = /\/snake-game\/[dD]esktop(\.html)?/;
 
-const URL_MOBILE = "/snake-game/mobile";
+const URL_MOBILE = /\/snake-game\/[mM]obile(\.html)?/;
 
 const w = window;
+
+let { pathname } = w.location;
 
 document.addEventListener("DOMContentLoaded", () => {
   w.addEventListener(
@@ -21,6 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     false
   );
 
-  if (w.location.pathname === URL_DESKTOP) App(700, 35, 35, "keydown");
-  else if (w.location.pathname === URL_MOBILE) App(200, 10, 10, "click");
+  if (URL_DESKTOP.test(pathname)) App(700, 35, 35, "keydown");
+  else if (URL_MOBILE.test(pathname)) App(200, 10, 10, "click");
 });
