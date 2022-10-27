@@ -139,6 +139,7 @@ export default function (sizeOfBoard, size, move, event) {
         : d.addEventListener("click", chooseDirectionMobile);
 
       let aux2;
+
       for (let cube of snake.slice(1)) {
         cube = cube.style;
         aux2 = [cube.top, cube.left];
@@ -167,8 +168,6 @@ export default function (sizeOfBoard, size, move, event) {
 
       positions[top / size][left / size] = `${top}-${left}`;
       positions[secondCubeTop / size][secondCubeLeft / size] = false;
-
-      console.log(JSON.stringify(positions));
 
       checkFood(snake, $food, $board, positions, headTop, headLeft, size);
 
