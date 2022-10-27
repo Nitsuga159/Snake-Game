@@ -32,8 +32,8 @@ export default function (sizeOfBoard, size, move, event) {
 
   setPositions(positions, size);
 
-  const choiceDirectionDesktop = (e) => {
-    d.removeEventListener(event, choiceDirectionDesktop);
+  const chooseDirectionDesktop = (e) => {
+    d.removeEventListener(event, chooseDirectionDesktop);
 
     if (e.key === "ArrowLeft" && direction !== RIGHT) return (direction = LEFT);
 
@@ -45,8 +45,8 @@ export default function (sizeOfBoard, size, move, event) {
     if (e.key === "ArrowDown" && direction !== UP) return (direction = DOWN);
   };
 
-  const choiceDirectionMobile = ({ target }) => {
-    d.removeEventListener(event, choiceDirectionMobile);
+  const chooseDirectionMobile = ({ target }) => {
+    d.removeEventListener(event, chooseDirectionMobile);
 
     if (target.matches(".arrow-left") && direction !== RIGHT)
       return (direction = LEFT);
@@ -68,8 +68,8 @@ export default function (sizeOfBoard, size, move, event) {
       d.querySelector(".score").textContent = 0;
 
       event === "keydown"
-        ? d.addEventListener("keydown", choiceDirectionDesktop)
-        : d.addEventListener("click", choiceDirectionMobile);
+        ? d.addEventListener("keydown", chooseDirectionDesktop)
+        : d.addEventListener("click", chooseDirectionMobile);
 
       d.removeEventListener("keydown", startGameDesktop);
     }
@@ -82,8 +82,8 @@ export default function (sizeOfBoard, size, move, event) {
       d.querySelector(".score").textContent = 0;
 
       event === "keydown"
-        ? d.addEventListener("keydown", choiceDirectionDesktop)
-        : d.addEventListener("click", choiceDirectionMobile);
+        ? d.addEventListener("keydown", chooseDirectionDesktop)
+        : d.addEventListener("click", chooseDirectionMobile);
 
       d.removeEventListener("click", startGameMobile);
     }
@@ -93,8 +93,8 @@ export default function (sizeOfBoard, size, move, event) {
     clearInterval(interval);
     setPositions(positions, size);
     event === "keydown"
-      ? d.removeEventListener("keydown", choiceDirectionDesktop)
-      : d.removeEventListener("click", choiceDirectionMobile);
+      ? d.removeEventListener("keydown", chooseDirectionDesktop)
+      : d.removeEventListener("click", chooseDirectionMobile);
     snake = [];
     direction = RIGHT;
     const $gameOver = d.createElement("p");
@@ -135,8 +135,8 @@ export default function (sizeOfBoard, size, move, event) {
       }
 
       event === "keydown"
-        ? d.addEventListener("keydown", choiceDirectionDesktop)
-        : d.addEventListener("click", choiceDirectionMobile);
+        ? d.addEventListener("keydown", chooseDirectionDesktop)
+        : d.addEventListener("click", chooseDirectionMobile);
 
       let aux2;
       for (let cube of snake.slice(1)) {

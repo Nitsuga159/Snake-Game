@@ -70,8 +70,8 @@ let snake = [],
 
 setPositions(positions, size);
 
-const choiceDirection = (e) => {
-  d.removeEventListener("keydown", choiceDirection);
+const chooseDirection = (e) => {
+  d.removeEventListener("keydown", chooseDirection);
 
   if (e.key === "ArrowLeft" && direction !== RIGHT) return (direction = LEFT);
 
@@ -138,7 +138,7 @@ Como `move` (la cantidad de pixeles que se desplaza la snake) es igual a `size`,
 
 Más adelante veremos cómo manipularlo y utilizarlo a nuestro favor para saber dónde está nuestra snake y adónde ubicar su comida.
 
-Muy bien, es momento de ver cómo podemos hacer cambiar la dirección de la variable `direction`. Para eso creé la función **_choiceDirection_**, ésta será llamada cuando ocurra el evento "keydown" y accediendo al evento que llega por parámetro, en su propiedad `key`, puedo ver si la tecla es de las cuatro que me interesa, si es una de ellas, corto la ejecución de la función con un **_return_** y reasigno a `direction` con su nueva dirección.
+Muy bien, es momento de ver cómo podemos hacer cambiar la dirección de la variable `direction`. Para eso creé la función **_chooseDirection_**, ésta será llamada cuando ocurra el evento "keydown" y accediendo al evento que llega por parámetro, en su propiedad `key`, puedo ver si la tecla es de las cuatro que me interesa, si es una de ellas, corto la ejecución de la función con un **_return_** y reasigno a `direction` con su nueva dirección.
 
 Ahora, puede que te estés haciendo algunas preguntas, como qué hace ese removeEventListener y la condición después de cada && en los Ifs. Bueno, empecemos por la segunda. Como bien sabemos en el juego de la snake siempre es posible moverse hacia la dirección que uno quiera, excepto a la contraria de donde estoy apuntado, ya que ello induciría a un choque instantáneo con el cuerpo de la propia snake y perdería. Por lo que irse a la dirección opuesta de la actual está prohibido. Es así que cuando el jugador aprieta la tecla "left", primero tengo que verificar que su snake no esté apuntando a "right", ya que sino todo su cuerpo restante estará esperando ansioso por una buena colisión ☠️. De ser así, se cancela la condición del if sin ejecutarse la acción.
 
@@ -154,7 +154,7 @@ const startGame = (e) => {
     initializeGame($board, snake, size, move);
     game();
     d.querySelector(".score").textContent = 0;
-    d.addEventListener("keydown", choiceDirection);
+    d.addEventListener("keydown", chooseDirection);
     d.removeEventListener("keydown", startGame);
   }
 };
@@ -228,7 +228,7 @@ Además de meter los cubos al tablero, coloco de igual forma los cubos en el arr
 
 Una vez que ha terminado de hacer lo suyo **_initializeGame_** sigue la función **_game_**, hablaremos de ella en el próximo apartado. Tengo un elemento `p` con la clase "score", me lo traigo del DOM e inicializo su contenido textual en 0, será el contador de la comidas recogidas.
 
-Como se ha inicializado el juego le agrego otro evento "keydown" al `document` pero la paso como callback la función **_choiceDirection_** que ya vimos qué hace. Después de hacer todo eso no hay necesidad de que startGame siga activo por si el usuario vuelve a presionar "espacio", entonces removemos el evento del `document` (si te das cuenta, es lo mismo que hacemos con choiceDirection cuando se activa).
+Como se ha inicializado el juego le agrego otro evento "keydown" al `document` pero la paso como callback la función **_chooseDirection_** que ya vimos qué hace. Después de hacer todo eso no hay necesidad de que startGame siga activo por si el usuario vuelve a presionar "espacio", entonces removemos el evento del `document` (si te das cuenta, es lo mismo que hacemos con chooseDirection cuando se activa).
 
 ### Pequeño apartado para hablar sobre los removeEventListeners
 
@@ -262,7 +262,7 @@ const game = () => {
         break;
     }
 
-    d.addEventListener("keydown", choiceDirection);
+    d.addEventListener("keydown", chooseDirection);
 
     for (let cube of snake.slice(1)) {
       cube = cube.style;
@@ -346,7 +346,7 @@ export default function ($board, snake, top, left, size) {
 const gameOver = (interval, theWinner) => {
     clearInterval(interval);
     setPositions(positions, size);
-    d.removeEventListener("keydown", choiceDirection);
+    d.removeEventListener("keydown", chooseDirection);
     snake = [];
     direction = RIGHT;
     const $gameOver = d.createElement("p");
@@ -407,7 +407,7 @@ Sé lo que te estás preguntando: "Bien, nuestra cabeza ya se mueve pero... y el
 
 ```javascript
 ...
-d.addEventListener("keydown", choiceDirection);
+d.addEventListener("keydown", chooseDirection);
 
     for (let cube of snake.slice(1)) {
       cube = cube.style;
@@ -424,13 +424,13 @@ d.addEventListener("keydown", choiceDirection);
 ...
 ```
 
-Te acordás que cuando el usuario apretaba una tecla en el evento "keydown" con la callback **_choiceDirection_** en la misma se eliminaba el evento con esa función ? Entonces, cuándo el jugador vuelve a tenér el evento con la función **_choiceDirection_**? Bueno, eso sucede después del switch en la callback del setInterval. Pensalo de este modo: `evento keydown para empezar el juego, si es espacio se inicia y se elimina el evento keydown con la función startGame` --> `se inicia un setInterval con 100ms llamándose la callback` --> `cuando el jugador apreta una tecla se remueve el evento keydown y si se eligió una direction válida se reestablece` --> `el evento vuelve a ser reestablecido una vez que en el setInterval haya pasado por el switch llegando a esa línea`.
+Te acordás que cuando el usuario apretaba una tecla en el evento "keydown" con la callback **_chooseDirection_** en la misma se eliminaba el evento con esa función ? Entonces, cuándo el jugador vuelve a tenér el evento con la función **_chooseDirection_**? Bueno, eso sucede después del switch en la callback del setInterval. Pensalo de este modo: `evento keydown para empezar el juego, si es espacio se inicia y se elimina el evento keydown con la función startGame` --> `se inicia un setInterval con 100ms llamándose la callback` --> `cuando el jugador apreta una tecla se remueve el evento keydown y si se eligió una direction válida se reestablece` --> `el evento vuelve a ser reestablecido una vez que en el setInterval haya pasado por el switch llegando a esa línea`.
 
-Muy bien, ahora, por qué simplemente hacemos todo este ida vuelta y no dejamos el evento "keydown" del **_ChoiceDirection_** permanente, si total hasta que la función callback llegue al switch se podría elegir a qué `direction` ir. Esa es una muy buena lógica pero hay un caso del que nos estamos olvidando. Fijáte en la condición de los IFs del **_choiceDirection_** y la cantidad de `delay` en el setInterval. Es un tiempo pequeñísimo a ojo humano, pero el jugador puede llegar a romper el juego de una manera increíble!!! Recordá el principio por el cual pusimos las condiciones IFs después del &&. Exacto, para que no vaya a su contrario!! Pero supongamos que nuestra snake se encuentra apuntado a la dirección "RIGHT", claramente no podemos ir hacia el "LEFT" por cómo hicimos nuestras condiciones. Pero si el jugador apreta "UP" o "DOWN" y todavía no se ha efectuado la sumatoría de movimiento, puede a la vez en tiempo record apretar "LEFT"!! Y como `direction` es "UP" o "DOWN" no tendrá problemas en las condiciones con habilitar el cambio y PUM!! Como nuestra snake en ese tiempo record todavía estaba en el mismo lugar se chocara contra su propio cuerpo!!
+Muy bien, ahora, por qué simplemente hacemos todo este ida vuelta y no dejamos el evento "keydown" del **_chooseDirection_** permanente, si total hasta que la función callback llegue al switch se podría elegir a qué `direction` ir. Esa es una muy buena lógica pero hay un caso del que nos estamos olvidando. Fijáte en la condición de los IFs del **_chooseDirection_** y la cantidad de `delay` en el setInterval. Es un tiempo pequeñísimo a ojo humano, pero el jugador puede llegar a romper el juego de una manera increíble!!! Recordá el principio por el cual pusimos las condiciones IFs después del &&. Exacto, para que no vaya a su contrario!! Pero supongamos que nuestra snake se encuentra apuntado a la dirección "RIGHT", claramente no podemos ir hacia el "LEFT" por cómo hicimos nuestras condiciones. Pero si el jugador apreta "UP" o "DOWN" y todavía no se ha efectuado la sumatoría de movimiento, puede a la vez en tiempo record apretar "LEFT"!! Y como `direction` es "UP" o "DOWN" no tendrá problemas en las condiciones con habilitar el cambio y PUM!! Como nuestra snake en ese tiempo record todavía estaba en el mismo lugar se chocara contra su propio cuerpo!!
 
 Lo bueno es que una vez que el jugador haya apretado una tecla no podrá cambiar la `direction` después de que se realice el switch (la sumatoría de movimiento) y así evitar colisiones de ese tipo. El jugador ni se dará cuenta de que se removió el evento y el juego sigue funcionando perfectamente sin ese bug de colisión.
 
-Si no me creés o tenés cierto escepticismo con lo que digo, te invito a que remuevas esas líneas donde remuevo el evento en **_choiceDirection_** y donde lo agrego en el setInterval. Verás que el juego continuará de igual manera pero si realizás esa maniobra maldita, tu snake se comerá a sí misma.
+Si no me creés o tenés cierto escepticismo con lo que digo, te invito a que remuevas esas líneas donde remuevo el evento en **_chooseDirection_** y donde lo agrego en el setInterval. Verás que el juego continuará de igual manera pero si realizás esa maniobra maldita, tu snake se comerá a sí misma.
 
 Ahora, acá llega la magia. Con el siguiente bucle for itero sobre cada uno de los "cubos" de mi snake, excepto el primero, ya que la head ya está actualizada, por eso hago `snake.slice(1)`. Como voy a estar usando la propiedad `style` de mis `cube` para acceder a `top` y `left` reasigno por cada iteración a `cube` como `cube.style` para acortar código. Ahora por cada `cube` voy a acceder a su propiedades `top` y `left` y asignarles la posición de su próximo. Pero OJO!! Esta es la razón por la que declaré `aux1` y le guardé las coordenadas del head. Ya que si hubiera accedido a las propiedades de head después del switch tendría la posición actual del head y no la anterior.
 
@@ -615,7 +615,7 @@ Sabemos que nuestro tablero tiene un `700*700` y cada `cube` de nuestra snake es
 const gameOver = (interval, theWinner) => {
   clearInterval(interval);
   setPositions(positions, size);
-  d.removeEventListener("keydown", choiceDirection);
+  d.removeEventListener("keydown", chooseDirection);
   snake = [];
   direction = RIGHT;
   const $gameOver = d.createElement("p");
@@ -631,7 +631,7 @@ const gameOver = (interval, theWinner) => {
 };
 ```
 
-Veamos qué hace **_gameOver_**. Siempre espera un parámetro que sea `interval` la referencia al intervalo que se está ejecutando. Simplemente con _clearInteval_ hacemos que pare el juego. Seguido de eso, debemos preparar el juego para que se puede reiniciar una nueva partida. Es por eso que primero seteo las posiciones con **_setPositions_** que ya fue vista, remuevo el evento "keydown" con la función **_choiceDirection_** para que no se pueda cambiar `direction` mientras el juego no esté activo, reasigno `snake` a un nuevo arreglo, `direction` de nuevo a RIGHT. Creo un elemento `p` donde le coloco una clase y un texto de "Game Over" junto al score obtenido.
+Veamos qué hace **_gameOver_**. Siempre espera un parámetro que sea `interval` la referencia al intervalo que se está ejecutando. Simplemente con _clearInteval_ hacemos que pare el juego. Seguido de eso, debemos preparar el juego para que se puede reiniciar una nueva partida. Es por eso que primero seteo las posiciones con **_setPositions_** que ya fue vista, remuevo el evento "keydown" con la función **_chooseDirection_** para que no se pueda cambiar `direction` mientras el juego no esté activo, reasigno `snake` a un nuevo arreglo, `direction` de nuevo a RIGHT. Creo un elemento `p` donde le coloco una clase y un texto de "Game Over" junto al score obtenido.
 
 Ahora, fijáte que si se envió el _true_ a **_gameOver_** significa que se logró llegar al final, por lo que en ese caso reemplazo el contenido textual del `p` a "YOU'RE GOD" para que nuestor jugador termine satisfecho.
 
