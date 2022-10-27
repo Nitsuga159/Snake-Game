@@ -138,16 +138,13 @@ export default function (sizeOfBoard, size, move, event) {
         ? d.addEventListener("keydown", choiceDirectionDesktop)
         : d.addEventListener("click", choiceDirectionMobile);
 
+      let aux2;
       for (let cube of snake.slice(1)) {
         cube = cube.style;
-        let aux2 = [cube.top, cube.left],
-          cubeTop = +cube.top.slice(0, -2),
-          cubeLeft = +cube.left.slice(0, -2);
-
-        positions[cubeTop / size][cubeLeft / size] = false;
-
+        aux2 = [cube.top, cube.left];
         cube.top = aux1[0];
         cube.left = aux1[1];
+
         aux1 = aux2;
       }
 
@@ -163,10 +160,15 @@ export default function (sizeOfBoard, size, move, event) {
 
       positions[headTop / size][headLeft / size] = false;
 
-      let top = +aux1[0].slice(0, -2),
-        left = +aux1[1].slice(0, -2);
+      let top = +aux2[0].slice(0, -2),
+        left = +aux2[1].slice(0, -2),
+        secondCubeTop = +snake.at(1).style.top.slice(0, -2),
+        secondCubeLeft = +snake.at(1).style.left.slice(0, -2);
 
       positions[top / size][left / size] = `${top}-${left}`;
+      positions[secondCubeTop / size][secondCubeLeft / size] = false;
+
+      console.log(JSON.stringify(positions));
 
       checkFood(snake, $food, $board, positions, headTop, headLeft, size);
 
