@@ -8,12 +8,14 @@ export default function checkFood(
   positions,
   headTop,
   headLeft,
+  tailLeft,
+  tailRight,
   size
 ) {
   if (!$food) return $board.appendChild(generateFood(positions, size));
 
   if ($food.style.top + $food.style.left === `${headTop}px${headLeft}px`) {
-    eatFood($board, snake, headTop, headLeft, size);
+    eatFood($board, snake, tailLeft, tailRight, size);
     $board.removeChild($food);
   }
 }

@@ -6,6 +6,21 @@ En este README explicaré cada parte del código javascript para la funcionabili
 
 Trataré de explicarlo de la mejor manera, cualquier duda que tengas o recomendación para el código podés hacerla en mi correo: agusromero0815@gmail.com o a mi [red social](https://www.instagram.com/agusromero159/).
 
+### Aclaraciones al terminar el código:
+
+- Pienso en algún futuro cercano implementar un diseño responsivo para que incluso se puede usar desde otros dispositivos con distintos tamaños de pantalla. Te invito a realizar lo mismo!!!
+
+- Si te interesa saber cómo hice para aumentar la velocidad de la `snake`, simplemente lo hice cambiando el valor de la variable `delay`, así de fácil. De igual manera podés encontrar ese fragmento del código al final de _App.js_.
+
+- Puede que notés que tu `snake` se mueve de manera muy cortante, y es porque directamente cambiás la posición bruscamente. Si querés que el movimiento sea más _smooth_ te recomiendo esta línea de CSS para ponerle una transición súper corta cuando cambian los valores `top` y `left`.
+
+```css
+.area > div {
+  border-radius: 40%;
+  transition: all 0.2s ease;
+}
+```
+
 ## Cómo diseñé el juego:
 
 Para empezar, al principio mi problema no era la lógica que tendría este juego sino cómo plasmarlo en el contenido HTML. Hay varias formas de realizarlo, una de ellas es con canvas. Pero debido a que mi conocimiento de ese elemento es nulo, he decidido usar puros elementos de bloque. Es decir, los divs.
@@ -240,61 +255,79 @@ Mucha gente sabe cómo añadir eventos al DOM pero no saben cómo se remueven, y
 //App.js
 
 const game = () => {
-  let interval = setInterval(() => {
-    let prevHeadLeft = +snake[0].style.left.slice(0, -2),
-      prevHeadTop = +snake[0].style.top.slice(0, -2),
-      aux1 = [`${prevHeadTop}px`, `${prevHeadLeft}px`];
+  positions[0][0] = false;
+  positions[0][1] = false;
 
-    const $food = d.querySelector("#food");
+    let interval = setInterval(() => {
+      let head = snake[0].style,
+        prevHeadLeft = num(head.left),
+        prevHeadTop = num(head.top),
+        aux1 = [`${prevHeadTop}px`, `${prevHeadLeft}px`];
 
-    switch (direction) {
-      case LEFT:
-        snake[0].style.left = `${prevHeadLeft - move}px`;
-        break;
-      case UP:
-        snake[0].style.top = `${prevHeadTop - move}px`;
-        break;
-      case RIGHT:
-        snake[0].style.left = `${prevHeadLeft + move}px`;
-        break;
-      case DOWN:
-        snake[0].style.top = `${prevHeadTop + move}px`;
-        break;
-    }
+      const $food = d.querySelector("#food");
 
-    d.addEventListener("keydown", chooseDirection);
+      switch (direction) {
+        case LEFT:
+          head.left = `${prevHeadLeft - move}px`;
+          break;
+        case UP:
+          head.top = `${prevHeadTop - move}px`;
+          break;
+        case RIGHT:
+          head.left = `${prevHeadLeft + move}px`;
+          break;
+        case DOWN:
+          head.top = `${prevHeadTop + move}px`;
+          break;
+      }
 
-    for (let cube of snake.slice(1)) {
-      cube = cube.style;
-      let aux2 = [cube.top, cube.left],
-        cubeTop = +cube.top.slice(0, -2),
-        cubeLeft = +cube.left.slice(0, -2);
+      event === "keydown"
+        ? d.addEventListener("keydown", chooseDirectionDesktop)
+        : d.addEventListener("click", chooseDirectionMobile);
 
-      positions[cubeTop / size][cubeLeft / size] = false;
+      let aux2;
+      for (let cube of snake.slice(1)) {
+        cube = cube.style;
+        aux2 = [cube.top, cube.left];
 
-      cube.top = aux1[0];
-      cube.left = aux1[1];
-      aux1 = aux2;
-    }
+        cube.top = aux1[0];
+        cube.left = aux1[1];
 
-    let headLeft = +snake[0].style.left.slice(0, -2),
-      headTop = +snake[0].style.top.slice(0, -2);
+        aux1 = aux2;
+      }
 
-    if (headTop < 0 || headTop > sizeOfBoard - size) return gameOver(interval);
-    if (headLeft < 0 || headLeft > sizeOfBoard - size) return gameOver(interval);
-    if (positions[headTop / size][headLeft / size] === false) return gameOver(interval);
+      let headLeft = num(head.left),
+        headTop = num(head.top);
 
-    positions[headTop / size][headLeft / size] = false;
+      if (headTop < 0 || headTop > sizeOfBoard - size)
+        return gameOver(interval);
+      if (headLeft < 0 || headLeft > sizeOfBoard - size)
+        return gameOver(interval);
+      if (positions[headTop / size][headLeft / size] === false)
+        return gameOver(interval);
 
-    let top = +aux1[0].slice(0, -2),
-      left = +aux1[1].slice(0, -2);
+      positions[headTop / size][headLeft / size] = false;
 
-    positions[top / size][left / size] = `${top}-${left}`;
+      let tailTop = num(aux1[0]),
+        tailLeft = num(aux1[1]);
 
-    checkFood(snake, $food, $board, positions, headTop, headLeft, size);
+      positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft}`;
 
-    snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
-  }, delay);
+      checkFood(
+        snake,
+        $food,
+        $board,
+        positions,
+        headTop,
+        headLeft,
+        tailTop,
+        tailLeft,
+        size
+      );
+
+      snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
+    }, delay);
+  };
 };
 
 //checkFood
@@ -366,13 +399,33 @@ Tal vez pienses que es un lío imposible de comprender pero tranqui, se puede. E
 
 En definitiva estamos ante el corazón de nuestro juego, será quien actualizará cada movimiento de nuestra snake (en este caso cada 100 ms). Dividamos nuestro código en fragmentos.
 
+Ahora, si te das cuenta, inicialicé al principio de game, antes de empezar el intervalo, las posiciones de mis dos cubos en false.
+
 ```javascript
-let prevHeadLeft = +snake[0].style.left.slice(0, -2),
-  prevHeadTop = +snake[0].style.top.slice(0, -2),
+positions[0][0] = false;
+positions[0][1] = false;
+```
+
+Por qué _false_ ? Porque de esa manera filtraremos todas las `positions` disponibles a la hora de querer posicionar la futura comida.
+
+```javascript
+let head = snake[0].style,
+  prevHeadLeft = num(head.left),
+  prevHeadTop = num(head.top),
   aux1 = [`${prevHeadTop}px`, `${prevHeadLeft}px`];
 ```
 
-Atento a la expresión `snake[0].style.left` aquí simplemente le estamos diciendo que nos devuelva el `left` de el primer cubo de snake. Nos dará N número + px, ej: "10px". Pero a mí solo me interesa el número y en tipo de dato _number_, por lo que primero le hago `.slice(0, -2)` esto si se lo aplicamos a un string me devolverá todos los carácteres excepto los últimos dos, justamente lo que buscaba!! Y como sabemos que tanto `left` como `top` van a tener siempre "px" podemos estar seguros que siempre vamos a querer todos los carácteres del string menos los últimos 2. Y por si no sabías, si tenés un string que es un número con ponerle un + adelante sin sumarlo a nada, por coerción de datos se pasará a _number_.
+Guardamos en `head` el primer primer elemento de la snake accediendo al objeto style. Recordemos que como style es un objeto y, por lo tanto, tengo la referencia, entonces cuando modifique las propiedades `top` y `left` serán afectadas al objeto style original.
+
+Vemos que guardados las posiciones del head en `prevHeadLeft` y `prevHeadTop`. Pero llamando a una función **_num_**. Veamos qué hace.
+
+```javascript
+//num.js
+
+export default (num) => +num.slice(0, -2);
+```
+
+Atento a la expresión `+num.slice(0, -2)` aquí simplemente le estamos diciendo que nos devuelva el `num (que puede ser el top o left)`. Nos dará N número + px, ej: "10px". Pero a mí solo me interesa el número y en tipo de dato _number_, por lo que primero le hago `.slice(0, -2)` esto si se lo aplicamos a un string me devolverá todos los carácteres excepto los últimos dos, justamente lo que buscaba!! Y como sabemos que tanto `left` como `top` van a tener siempre "px" podemos estar seguros que siempre vamos a querer todos los carácteres del string menos los últimos 2. Y por si no sabías, si tenés un string que es un número con ponerle un + adelante sin sumarlo a nada, por coerción de datos se pasará a _number_.
 
 Por otro lado me guardo la posición del cubo head en una variable llamada `aux1`. Esto es debido a que el valor de la head lo actualizaremos enseguida pero voy a requerir de la posición previa para otros cálculos.
 
@@ -382,16 +435,16 @@ const $food = d.querySelector("#food");
 
 switch (direction) {
   case LEFT:
-    snake[0].style.left = `${prevHeadLeft - move}px`;
+    head.left = `${prevHeadLeft - move}px`;
     break;
   case UP:
-    snake[0].style.top = `${prevHeadTop - move}px`;
+    head.top = `${prevHeadTop - move}px`;
     break;
   case RIGHT:
-    snake[0].style.left = `${prevHeadLeft + move}px`;
+    head.left = `${prevHeadLeft + move}px`;
     break;
   case DOWN:
-    snake[0].style.top = `${prevHeadTop + move}px`;
+    head.top = `${prevHeadTop + move}px`;
     break;
 }
 ...
@@ -399,7 +452,7 @@ switch (direction) {
 
 Buscamos si existe en el DOM un elemento con el id "food" (en la primera llamada no estará por lo que será `null`), esto sirve para ver si hay comida en el tablero, si no la hay ya verás qué sucede próximamente.
 
-Llegó el momento de ver cuando se actualiza la posición del head. Como verás el switch se basa en lo que tenga la variable `direction` es decir que será lo que el jugador haya presionado como última tecla. Si le elección es UP, entonces agarra el head con `snake[0]` busca la propiedad top y debe hacer top anterior menos movimiento (en este caso `move` era igual que `size`, es decir, 35). Acordate que `top: 0, left: 0` simboliza la esquina superior izquierda, siendo que las coordenas X es LEFT e Y es TOP. Si queremos subir entonces tenemos que restar top, si queremos bajar, hay que sumarle y viceversa con lo otro.
+Llegó el momento de ver cuando se actualiza la posición del head. Como verás el switch se basa en lo que tenga la variable `direction` es decir que será lo que el jugador haya presionado como última tecla. Si le elección es UP, entonces agarra el `head (snake[0].style)` busca la propiedad top y debe hacer top anterior menos movimiento (en este caso `move` era igual que `size`, es decir, 35). Acordate que `top: 0, left: 0` simboliza la esquina superior izquierda, siendo que las coordenas X es LEFT e Y es TOP. Si queremos subir entonces tenemos que restar top, si queremos bajar, hay que sumarle y viceversa con lo otro.
 
 Bien, ya logramos que cada 100 ms nuestra cabeza se mueva y encima responde a las elecciones que presione el jugador!!!
 
@@ -409,16 +462,14 @@ Sé lo que te estás preguntando: "Bien, nuestra cabeza ya se mueve pero... y el
 ...
 d.addEventListener("keydown", chooseDirection);
 
+    let aux2;
     for (let cube of snake.slice(1)) {
       cube = cube.style;
-      let aux2 = [cube.top, cube.left],
-        cubeTop = +cube.top.slice(0, -2),
-        cubeLeft = +cube.left.slice(0, -2);
-
-      positions[cubeTop / size][cubeLeft / size] = false;
+      aux2 = [cube.top, cube.left];
 
       cube.top = aux1[0];
       cube.left = aux1[1];
+
       aux1 = aux2;
     }
 ...
@@ -432,20 +483,18 @@ Lo bueno es que una vez que el jugador haya apretado una tecla no podrá cambiar
 
 Si no me creés o tenés cierto escepticismo con lo que digo, te invito a que remuevas esas líneas donde remuevo el evento en **_chooseDirection_** y donde lo agrego en el setInterval. Verás que el juego continuará de igual manera pero si realizás esa maniobra maldita, tu snake se comerá a sí misma.
 
-Ahora, acá llega la magia. Con el siguiente bucle for itero sobre cada uno de los "cubos" de mi snake, excepto el primero, ya que la head ya está actualizada, por eso hago `snake.slice(1)`. Como voy a estar usando la propiedad `style` de mis `cube` para acceder a `top` y `left` reasigno por cada iteración a `cube` como `cube.style` para acortar código. Ahora por cada `cube` voy a acceder a su propiedades `top` y `left` y asignarles la posición de su próximo. Pero OJO!! Esta es la razón por la que declaré `aux1` y le guardé las coordenadas del head. Ya que si hubiera accedido a las propiedades de head después del switch tendría la posición actual del head y no la anterior.
-
-Así como guardamos las coordenadas previas a la actualización del head, hacemos lo mismo con el `cube` que estamos por actualizar, la guardamos en una variable llamada `aux2`.
-
 ```javascript
 ...
-    cubeTop = +cube.top.slice(0, -2),
-    cubeLeft = +cube.left.slice(0, -2);
-
-  positions[cubeTop / size][cubeLeft / size] = false;
+let aux2;
+for (let cube of snake.slice(1)) {
+    cube = cube.style;
+    aux2 = [cube.top, cube.left];
 ...
 ```
 
-Ahora que estamos recorriendo el cuerpo de la snake y actualizando sus posiciones, es el momento perfecto para hacerle saber a nuestro `positions` qué lugares estamos ocupando en el segundo exacto. Es así que obtengo las coordenadas de tipo _number_ del `cube` iterando y utilizando la fórmula de dividir la coordenada por el `size` para obtener el indice en las posiciones, y ahí es cuando lo reasigno a _false_. Por qué _false_ ? Porque de esa manera filtraremos todas las `positions` disponibles a la hora de querer posicionar la futura comida.
+Ahora, acá llega la magia. Con el siguiente bucle for itero sobre cada uno de los "cubos" de mi snake, excepto el primero, ya que la head ya está actualizada, por eso hago `snake.slice(1)`. Como voy a estar usando la propiedad `style` de mis `cube` para acceder a `top` y `left` reasigno por cada iteración a `cube` como `cube.style` para acortar código. Ahora por cada `cube` voy a acceder a su propiedades `top` y `left` y asignarles la posición de su próximo. Pero OJO!! Esta es la razón por la que declaré `aux1` y le guardé las coordenadas del head. Ya que si hubiera accedido a las propiedades de head después del switch tendría la posición actual del head y no la anterior.
+
+Así como guardamos las coordenadas previas a la actualización del head, hacemos lo mismo con el `cube` que estamos por actualizar, la guardamos en una variable llamada `aux2`.
 
 ```javascript
 cube.top = aux1[0];
@@ -456,39 +505,37 @@ aux1 = aux2;
 Por último le decimos que el `cube` iterando, en su posición `top` y `left` son las de `aux1` (que en primer lugar son las de head). Ahora para que `aux1` siga teniendo la posición del anterior en la próxima iteración, le decimos que `aux1` es `aux2` (que eran las cooredenadas previas del `cube` que acabamos de actualizar).
 
 ```javascript
-let headLeft = +snake[0].style.left.slice(0, -2),
-  headTop = +snake[0].style.top.slice(0, -2);
+let headLeft = num(head.left),
+  headTop = num(head.top);
 
 if (headTop < 0 || headTop > sizeOfBoard - size) return gameOver(interval);
 if (headLeft < 0 || headLeft > sizeOfBoard - size) return gameOver(interval);
+if (positions[headTop / size][headLeft / size] === false)
+  return gameOver(interval);
 ```
 
 Después del bucle y una vez todos los `cube` en su lugar correspondiente obtenemos las coordenadas del head de tipo _number_ y ahora con los IFs posteriores verificamos si la head salió de nuestro tablero. En el caso de que el `top` o `left` sea menor a 0 o si su valor es mayor a `700` - `35`, porque ese es la última celda que puede ocupar un cubo en el final del ancho y de altura. Si fuera solo `700` eso le habilitaría al snake mover una celda más fuera del tablero y no queremos eso.
+También podés ver en el útlimo if que pregunto si en `positions`, las coordenadas del `head` están en _false_. Recordá que inicializamos las coordenadas de nuestras dos celdas primeras en _false_ para identificar que esa posición está ocupada, por lo que si en algún momento del juego la `head` se cruza con una posición en _false_, significa que se comió así misma y por lo tanto murió!!!
 
 En el caso de que se cumpla las condiciones, paran la ejecución con _return_ y llaman a la función **_gameOver_** pasándole la variable interval que contiene el cuerpo del setInterval. Veremos que hace **_gameOver_** más adelante.
 
 ```javascript
-if (positions[headTop / size][headLeft / size] === false)
-  return gameOver(interval);
-
 positions[headTop / size][headLeft / size] = false;
 
-let top = +aux1[0].slice(0, -2),
-  left = +aux1[1].slice(0, -2);
+let tailTop = num(aux1[0]),
+  tailLeft = num(aux1[1]);
 
-positions[top / size][left / size] = `${top}-${left}`;
+positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft}`;
 ```
-
-Una vez finalizado el bucle falta una celda más a deshabilitar en `positions`, la del head. Pero primero debemos saber si en la posición nueva que está el head es una donde ya estaba ocupada, si es así significa que hubo una colisión con el propio cuerpo de la snake. Entonces la condición del if es igual a _true_ y paramos el código con _return_ y llamamos a **_gameOver_**. Si no es así de igual manera decimos que la celda ahora está siendo ocupada igualándola a _false_.
 
 Genial!! Ya cubrimos los dos tipos de colisiones, por el tablero y por el propio cuerpo de la snake ✔️.
 
-Hasta ahora hemos tenido éxito en decirle a `positions` las celdas donde está el cuerpo de la snake, pero en ningún momento le decimos cúando vuelve estar disponible una vez que la snake deja esa celda. Bueno, eso se puede solucionar muy fácil obteniendo las coordenadas de `aux1`. Recordemos que `aux1` iba a estar siendo reasignado para poseer aquellas coordenadas previas de los `cube` a través de `aux2`. Por lo que una vez que finalice el bucle, `aux1` tendrá las coordenadas PREVIAS (no actual) de la cola. Perfecto!! Entonces solo tenemos que reasignar esa celda y darle de nuevo las coordenadas que le corresponden con `` positions[top / size][left / size] = `${top}-${left}`; `` así haríamos que cada posición previa de la cola se actualice y vuelva a obtener la coordena correspondiente ✔️.
+Una vez finalizado el bucle hay que deshabilitar una celda en `positions`, la del head, ya que si bien ya comprobamos que en la posición nueva del `head` no estaba en _false_, ahora porque la propia `head` se encuentra allí, debe estarlo. Ahora, si te das cuenta, cada vez que se ejecute la callback del setInterval y se haga este circuito, el `head` se estaría actualizando y estableciendo las `positions` en _false_. Hasta ahí bien, pero qué pasa cuando la cola deja un espacio anteriro, quedaría en _false_... Bueno, es por eso que ves esa línea en la que optengo los valores _number_ de `aux1` y las guardo en dos variables. Recordá que `aux1` al finalizar el bucle va a tener las coordenadas que se le asignó con `aux2`. O sea va a tener las de la cola, pero no la actualizada sino la anterior!!! Perfecto, ahora ya sabemos que `head` se encargará de deshabilitar las posiciones en las que avance y la línea `` positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft} `` se encargará de reestablecer la posición una vez que la cola haya avanzado.
 
 ```javascript
 //App.js
 ...
-checkFood(snake, $food, $board, positions, headTop, headLeft, size);
+checkFood(snake, $food, $board, positions, headTop, headLeft, tailTop, tailLeft, size);
 ...
 //checkFood.js
 
@@ -499,13 +546,15 @@ export default function checkFood(
   positions,
   headTop,
   headLeft,
+  tailTop,
+  tailLeft,
   size
 ) {
   if (!$food)
     return $board.appendChild(generateFood(positions, sizeOfBoard, size, move));
 
   if ($food.style.top + $food.style.left === `${headTop}px${headLeft}px`) {
-    eatFood($board, snake, headTop, headLeft, size);
+    eatFood($board, snake, tailTop, tailLeft, size);
     $board.removeChild($food);
   }
 }
@@ -524,6 +573,10 @@ Ok, una vez actualizadas las `positions` llega el momento de chequear la comida,
 - headTop --> _Coordenada top en tipo **number** de la head_
 
 - headLeft --> _Coordenada left en tipo **number** de la head_
+
+- tailTop --> _Coordenada top en tipo **number** de la tail (anterior)_
+
+- tailLeft --> _Coordenadaleft en tipo **number** de la tail (anterior)_
 
 - size --> _Tamaño de cada cube de la snake, en este caso 35px_
 
@@ -590,6 +643,7 @@ if ($food.style.top + $food.style.left === `${headTop}px${headLeft}px`) {
 Si el valor no es `null` no se ejecuta la parte de **_generateFood_** y se realiza la condición if de abajo. Verifica que tanto las coordenadas de le head sean iguales a las de la comida, si es así... chan chan!! Se ha recogido la comida por lo que la snake debe incrementarse. Llamamos a la función **_eatFood_** y removemos del `$board` el elemento `$food`. Veamos que hace **_eatFood_**:
 
 ```javascript
+//eatFood.js
 export default function ($board, snake, top, left, size) {
   const cuboTemp = makeLink(size, top, left, "rgb(240, 10, 10)");
   $board.appendChild(cuboTemp);
@@ -599,7 +653,7 @@ export default function ($board, snake, top, left, size) {
 }
 ```
 
-Como verás **_eatFood_** no tiene un código tan complejo. Simplemente crea otro `cube` con **_makeLink_**, le pasamos las coordenadas de la head. También podrías pasarle la de la cola pero es lo mismo. No habrá problemas de colisión porque el programa lo toma como si fueran los mismos. El cambio sucederá cuando se llame de nuevo la callcack de setInterval y se ejecute el bucle de `snake` dándole su nueva celda al `cube` añadido. Si te confunde porqué no hay colisión, recordá que es head quién determina si ha tocado una celda en _false_ y entonces concuerda que hubo colisión, y como el nuevo `cube` tiene la misma dirección que head pero no ha sido parte del bucle (aún) no tiene en la celda un _false_.
+Como verás **_eatFood_** no tiene un código tan complejo. Simplemente crea otro `cube` con **_makeLink_**, le pasamos las coordenadas de la `tail (anterior)`. Ese nuevo `cube` lo pone en el tablero y en el arreglo `snake`.
 
 Por último incrementamos el `score` para ver la acumulación.
 
@@ -640,18 +694,3 @@ Una vez finalizado todos esos seteos, vuelvo a colocarle el evento "keydown" al 
 ### Conclusión:
 
 Espero que te haya servido y disfrutado la explicación de este cógido de "Snake Game". Si te gustó te invito a que lo compartas y sobretodo a darle una estrellita ⭐⭐⭐. Cualquier duda o recomendación es bien recibida.
-
-### Aclaraciones:
-
-- Pienso en algún futuro cercano implementar un diseño responsivo para que incluso se puede usar desde otros dispositivos con distintos tamaños de pantalla. Te invito a realizar lo mismo!!!
-
-- Si te interesa saber cómo hice para aumentar la velocidad de la `snake` simplemente lo hice cambiando el valor de la variable `delay`, así de fácil. De igual manera podés encontrar ese fragmento del código al final de _App.js_.
-
-- Puede que notés que tu `snake` se mueve de manera muy cortante, y es porque directamente cambiás la posición bruscamente. Si querés que el movimiento sea más _smooth_ te recomiendo está línea de CSS para ponerle una transición súper corta cuando cambian los valores `top` y `left`.
-
-```css
-.area > div {
-  border-radius: 40%;
-  transition: all 0.2s ease;
-}
-```

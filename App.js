@@ -1,6 +1,7 @@
 import checkFood from "./helpers/checkFood.js";
 import initializeGame from "./helpers/initializeGame.js";
 import setPositions from "./helpers/setPositions.js";
+import num from "./helpers/num.js";
 
 export default function (sizeOfBoard, size, move, event) {
   // CREAMOS UNA CONSTANTE D QUE GUARDA UNA REFERENCIA DE DOCUMENT (POR COMODIDAD)
@@ -112,25 +113,29 @@ export default function (sizeOfBoard, size, move, event) {
   };
 
   const game = () => {
+    positions[0][0] = false;
+    positions[0][1] = false;
+
     let interval = setInterval(() => {
-      let prevHeadLeft = +snake[0].style.left.slice(0, -2),
-        prevHeadTop = +snake[0].style.top.slice(0, -2),
+      let head = snake[0].style,
+        prevHeadLeft = num(head.left),
+        prevHeadTop = num(head.top),
         aux1 = [`${prevHeadTop}px`, `${prevHeadLeft}px`];
 
       const $food = d.querySelector("#food");
 
       switch (direction) {
         case LEFT:
-          snake[0].style.left = `${prevHeadLeft - move}px`;
+          head.left = `${prevHeadLeft - move}px`;
           break;
         case UP:
-          snake[0].style.top = `${prevHeadTop - move}px`;
+          head.top = `${prevHeadTop - move}px`;
           break;
         case RIGHT:
-          snake[0].style.left = `${prevHeadLeft + move}px`;
+          head.left = `${prevHeadLeft + move}px`;
           break;
         case DOWN:
-          snake[0].style.top = `${prevHeadTop + move}px`;
+          head.top = `${prevHeadTop + move}px`;
           break;
       }
 
@@ -139,18 +144,18 @@ export default function (sizeOfBoard, size, move, event) {
         : d.addEventListener("click", chooseDirectionMobile);
 
       let aux2;
-
       for (let cube of snake.slice(1)) {
         cube = cube.style;
         aux2 = [cube.top, cube.left];
+
         cube.top = aux1[0];
         cube.left = aux1[1];
 
         aux1 = aux2;
       }
 
-      let headLeft = +snake[0].style.left.slice(0, -2),
-        headTop = +snake[0].style.top.slice(0, -2);
+      let headLeft = num(head.left),
+        headTop = num(head.top);
 
       if (headTop < 0 || headTop > sizeOfBoard - size)
         return gameOver(interval);
@@ -161,15 +166,22 @@ export default function (sizeOfBoard, size, move, event) {
 
       positions[headTop / size][headLeft / size] = false;
 
-      let top = +aux2[0].slice(0, -2),
-        left = +aux2[1].slice(0, -2),
-        secondCubeTop = +snake.at(1).style.top.slice(0, -2),
-        secondCubeLeft = +snake.at(1).style.left.slice(0, -2);
+      let tailTop = num(aux1[0]),
+        tailLeft = num(aux1[1]);
 
-      positions[top / size][left / size] = `${top}-${left}`;
-      positions[secondCubeTop / size][secondCubeLeft / size] = false;
+      positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft}`;
 
-      checkFood(snake, $food, $board, positions, headTop, headLeft, size);
+      checkFood(
+        snake,
+        $food,
+        $board,
+        positions,
+        headTop,
+        headLeft,
+        tailTop,
+        tailLeft,
+        size
+      );
 
       snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
     }, delay);
