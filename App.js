@@ -90,8 +90,7 @@ export default function (sizeOfBoard, size, move, event) {
     }
   };
 
-  const gameOver = (interval, theWinner) => {
-    clearInterval(interval);
+  const gameOver = (theWinner) => {
     setPositions(positions, size);
     event === "keydown"
       ? d.removeEventListener("keydown", chooseDirectionDesktop)
@@ -115,8 +114,13 @@ export default function (sizeOfBoard, size, move, event) {
   const game = () => {
     positions[0][0] = false;
     positions[0][1] = false;
+    let oldDate = new Date();
+    let interval = () => {
+      let newDate = new Date();
 
-    let interval = setInterval(() => {
+      if (newDate - oldDate >= delay) oldDate = new Date();
+      else return requestAnimationFrame(interval);
+
       let head = snake[0].style,
         prevHeadLeft = num(head.left),
         prevHeadTop = num(head.top),
@@ -157,12 +161,10 @@ export default function (sizeOfBoard, size, move, event) {
       let headLeft = num(head.left),
         headTop = num(head.top);
 
-      if (headTop < 0 || headTop > sizeOfBoard - size)
-        return gameOver(interval);
-      if (headLeft < 0 || headLeft > sizeOfBoard - size)
-        return gameOver(interval);
+      if (headTop < 0 || headTop > sizeOfBoard - size) return gameOver();
+      if (headLeft < 0 || headLeft > sizeOfBoard - size) return gameOver();
       if (positions[headTop / size][headLeft / size] === false)
-        return gameOver(interval);
+        return gameOver();
 
       positions[headTop / size][headLeft / size] = false;
 
@@ -183,8 +185,12 @@ export default function (sizeOfBoard, size, move, event) {
         size
       );
 
-      snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
-    }, delay);
+      snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(true);
+
+      requestAnimationFrame(interval);
+    };
+
+    requestAnimationFrame(interval);
   };
 
   const $select = d.querySelector("#select");
