@@ -114,6 +114,7 @@ export default function (sizeOfBoard, size, move, event) {
   const game = () => {
     positions[0][0] = false;
     positions[0][1] = false;
+
     let oldDate = new Date();
     let interval = () => {
       let newDate = new Date();
@@ -185,7 +186,7 @@ export default function (sizeOfBoard, size, move, event) {
         size
       );
 
-      snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(true);
+      if (snake.length >= (sizeOfBoard / size) ** 2 - 2) return gameOver(true);
 
       requestAnimationFrame(interval);
     };

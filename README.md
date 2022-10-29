@@ -258,7 +258,13 @@ const game = () => {
   positions[0][0] = false;
   positions[0][1] = false;
 
-    let interval = setInterval(() => {
+  let oldDate = new Date();
+  let interval = () => {
+      let newDate = new Date();
+
+      if (newDate - oldDate >= delay) oldDate = new Date();
+        else return requestAnimationFrame(interval);
+
       let head = snake[0].style,
         prevHeadLeft = num(head.left),
         prevHeadTop = num(head.top),
@@ -300,11 +306,11 @@ const game = () => {
         headTop = num(head.top);
 
       if (headTop < 0 || headTop > sizeOfBoard - size)
-        return gameOver(interval);
+        return gameOver();
       if (headLeft < 0 || headLeft > sizeOfBoard - size)
-        return gameOver(interval);
+        return gameOver();
       if (positions[headTop / size][headLeft / size] === false)
-        return gameOver(interval);
+        return gameOver();
 
       positions[headTop / size][headLeft / size] = false;
 
@@ -325,9 +331,11 @@ const game = () => {
         size
       );
 
-      snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
-    }, delay);
-  };
+      if(snake.length >= (sizeOfBoard / size) ** 2 - 2) return gameOver(true);
+      requestAnimationFrame(interval);
+    };
+
+  requestAnimationFrame(interval);
 };
 
 //checkFood
@@ -376,8 +384,7 @@ export default function ($board, snake, top, left, size) {
 
 //App.js
 
-const gameOver = (interval, theWinner) => {
-    clearInterval(interval);
+const gameOver = (theWinner) => {
     setPositions(positions, size);
     d.removeEventListener("keydown", chooseDirection);
     snake = [];
@@ -395,11 +402,34 @@ const gameOver = (interval, theWinner) => {
   };
 ```
 
-Tal vez pienses que es un lío imposible de comprender pero tranqui, se puede. En primer lugar tenemos una función llamada **_game_**, ésta lo único que hace es inicializar una variable llamada `interval` la cual crea un setInterval. Como bien sabemos setInterval acepta en su primer argumento una callback y en el segundo el tiempo de espera en milisegundos para ejecutar la función cada tanto. En este caso estamos usando `delay` para hacerle saber que cada 100 milisegundos se ejecute la callback. Ahora veamos qué hace la callback:
+Tal vez pienses que es un lío imposible de comprender pero tranqui, se puede. En primer lugar tenemos una función llamada **_game_**, ésta lo único que hace es inicializar una variable llamada `interval` la cual crea un loop. Esto lo hace posible haciendo `recursión`, es decir, se llama así misma internamente. Pero... ¿Si se llama así misma infinitamente no rompería la pila de llamadas y se rompe el código? Bueno, eso sucedería si solo la llamamos bruscamente, sí, pero fijate que cuando la llamo recursivamente lo hago con una función especial llamada **_requestAnimationFrame_**. Esta función pertenece del lado del navegador, del objeto `windows`, y acepta función callback que la llamará 60 veces por 1s (de ahí su nombre).
+Te recomiendo hacer una función recursiva sin un caso base. En seguida te dará un error por el máximo de llamadas (tranquilo, no se queda en un bucle infinito como un for). Ahora hacé una función recursiva, pero cuando llamás a la función internamente hacelo con **_requestAnimationFrame_** para que se encargue.
 
-En definitiva estamos ante el corazón de nuestro juego, será quien actualizará cada movimiento de nuestra snake (en este caso cada 100 ms). Dividamos nuestro código en fragmentos.
+En definitiva estamos ante el corazón de nuestro juego, será quien actualizará cada movimiento de nuestra `snake` (en este caso cada 100 ms). Dividamos nuestro código en fragmentos.
 
-Ahora, si te das cuenta, inicialicé al principio de game, antes de empezar el intervalo, las posiciones de mis dos cubos en false.
+```javascript
+function recursiva() {
+  console.log("Me llamo recursivamente y no rompo la pila!!");
+
+  requestAnimationFrame(recursiva);
+}
+```
+
+Ejecutá ese código y vas a ver como ese console.log se ejecuta indefinidamente sin romperse la pila de llamadas. Esto porque a nuestro ojo pareciera que ambas se ejecutan rapidamente, pero no es así. Si se hace una llamada recursiva a una función normal, sin caso base, esta se ejecuta en tiempo record, ni siquiera pasando a una parte mínima de un milisegundo!! Obviamente rompe la pila de llamadas. Pero **_requestAnimationFrame_** solo lo hará 60 veces por segundo, por lo que regula las llamadas que se hacen y no en tiempo record siguiendo una de otra infinitamente. De esa forma no rompe la pila de ejecución.
+
+```javascript
+  let oldDate = new Date();
+  let interval = () => {
+      let newDate = new Date();
+
+      if (newDate - oldDate >= delay) oldDate = new Date();
+        else return requestAnimationFrame(interval);
+```
+
+Ahora ya sabemos cómo mantenemos un loop en nuestro juego, pero no acaba esto acá. No queremos que nuestra `snake` se mueva 60 veces por segundo, si no que espere un tiempo de más. Pero hay un problema: **_requestAnimationFrame_** no es como un **_setInterval_**, no se le puede poner milisegundos de espera. Entonces, ¿Cómo hacemos?
+El objeto `Date` sirve, como su nombre lo dice, para obtener la fecha actual. Pero además, devuelve el tiempo transcurrido entre 1970 y el actual, expresado en milisegundos. Por lo que es un número muy extenso. ¿De qué nos sirve esto ? Bueno si se resta una instancia de un objeto `Date` con otro, obtendremos ese tiempo restado. Obviamente si restamos `new Date() - new Date()` nos va a dar 0 porque ambas se invocaron al momento. Entonces cómo haremos para decirle que espere 100 ms, fácil, creamos una instancia de `Date` afuera del loop, posteriormente dentro del loop creamos otra instancia del mismo, los restamos en un if para ver si el número es igual o mayor al `delay` que necesitamos (100). Obviamente a la primera llamada ambos serán 0 o a lo mejor se tarde un poco el segundo y hay una diferencia pero será mínima al `delay`. Entonces mientras se siga manteniendo este caso se ejecutará el lado else del if llamando de nuevo al loop y parando la ejecución con _return_. Este proceso se repetirá hasta que al fin se cumpla la condición, con el tiempo que se tarda en ejecutar el if, llamar de nuevo a la función y así sucesivamente, transcurre el tiempo y la resta del `newDate - oldDate` llegará al `delay` deseado. Entonces establecemos el `oldDate` a una nueva instancia de `Date` ya que en la próxima llamada se volvería a ejecutar el if y no queremos eso, al contrario, queremos que pasen otros 100ms. Cuando se ejecuta el lado true del if, no se hace el _return_ y se ejecuta el resto de la función. Logro conseguido ✔️
+
+Ahora, si te das cuenta, inicialicé al principio de game, antes de empezar el loop, las posiciones de mis dos cubos en false.
 
 ```javascript
 positions[0][0] = false;
@@ -475,13 +505,13 @@ d.addEventListener("keydown", chooseDirection);
 ...
 ```
 
-Te acordás que cuando el usuario apretaba una tecla en el evento "keydown" con la callback **_chooseDirection_** en la misma se eliminaba el evento con esa función ? Entonces, cuándo el jugador vuelve a tenér el evento con la función **_chooseDirection_**? Bueno, eso sucede después del switch en la callback del setInterval. Pensalo de este modo: `evento keydown para empezar el juego, si es espacio se inicia y se elimina el evento keydown con la función startGame` --> `se inicia un setInterval con 100ms llamándose la callback` --> `cuando el jugador apreta una tecla se remueve el evento keydown y si se eligió una direction válida se reestablece` --> `el evento vuelve a ser reestablecido una vez que en el setInterval haya pasado por el switch llegando a esa línea`.
+Te acordás que cuando el usuario apretaba una tecla en el evento "keydown" con la callback **_chooseDirection_** en la misma se eliminaba el evento con esa función ? Entonces, cuándo el jugador vuelve a tenér el evento con la función **_chooseDirection_**? Bueno, eso sucede después del switch en el loop. Pensalo de este modo: `evento keydown para empezar el juego, si es espacio se inicia y se elimina el evento keydown con la función startGame` --> `se inicia un loop con 100ms llamándose la callback` --> `cuando el jugador apreta una tecla se remueve el evento keydown y si se eligió una direction válida se reestablece` --> `el evento vuelve a ser reestablecido una vez que en el loop haya pasado por el switch llegando a esa línea`.
 
-Muy bien, ahora, por qué simplemente hacemos todo este ida vuelta y no dejamos el evento "keydown" del **_chooseDirection_** permanente, si total hasta que la función callback llegue al switch se podría elegir a qué `direction` ir. Esa es una muy buena lógica pero hay un caso del que nos estamos olvidando. Fijáte en la condición de los IFs del **_chooseDirection_** y la cantidad de `delay` en el setInterval. Es un tiempo pequeñísimo a ojo humano, pero el jugador puede llegar a romper el juego de una manera increíble!!! Recordá el principio por el cual pusimos las condiciones IFs después del &&. Exacto, para que no vaya a su contrario!! Pero supongamos que nuestra snake se encuentra apuntado a la dirección "RIGHT", claramente no podemos ir hacia el "LEFT" por cómo hicimos nuestras condiciones. Pero si el jugador apreta "UP" o "DOWN" y todavía no se ha efectuado la sumatoría de movimiento, puede a la vez en tiempo record apretar "LEFT"!! Y como `direction` es "UP" o "DOWN" no tendrá problemas en las condiciones con habilitar el cambio y PUM!! Como nuestra snake en ese tiempo record todavía estaba en el mismo lugar se chocara contra su propio cuerpo!!
+Muy bien, ahora, por qué simplemente hacemos todo este ida vuelta y no dejamos el evento "keydown" del **_chooseDirection_** permanente, si total hasta que la función callback llegue al switch se podría elegir a qué `direction` ir. Esa es una muy buena lógica pero hay un caso del que nos estamos olvidando. Fijáte en la condición de los IFs del **_chooseDirection_** y la cantidad de `delay` en el loop. Es un tiempo pequeñísimo a ojo humano, pero el jugador puede llegar a romper el juego de una manera increíble!!! Recordá el principio por el cual pusimos las condiciones IFs después del &&. Exacto, para que no vaya a su contrario!! Pero supongamos que nuestra snake se encuentra apuntado a la dirección "RIGHT", claramente no podemos ir hacia el "LEFT" por cómo hicimos nuestras condiciones. Pero si el jugador apreta "UP" o "DOWN" y todavía no se ha efectuado la sumatoría de movimiento, puede a la vez en tiempo record apretar "LEFT"!! Y como `direction` es "UP" o "DOWN" no tendrá problemas en las condiciones con habilitar el cambio y PUM!! Como nuestra snake en ese tiempo record todavía estaba en el mismo lugar se chocara contra su propio cuerpo!!
 
 Lo bueno es que una vez que el jugador haya apretado una tecla no podrá cambiar la `direction` después de que se realice el switch (la sumatoría de movimiento) y así evitar colisiones de ese tipo. El jugador ni se dará cuenta de que se removió el evento y el juego sigue funcionando perfectamente sin ese bug de colisión.
 
-Si no me creés o tenés cierto escepticismo con lo que digo, te invito a que remuevas esas líneas donde remuevo el evento en **_chooseDirection_** y donde lo agrego en el setInterval. Verás que el juego continuará de igual manera pero si realizás esa maniobra maldita, tu snake se comerá a sí misma.
+Si no me creés o tenés cierto escepticismo con lo que digo, te invito a que remuevas esas líneas donde remuevo el evento en **_chooseDirection_** y donde lo agrego en el loop. Verás que el juego continuará de igual manera pero si realizás esa maniobra maldita, tu snake se comerá a sí misma.
 
 ```javascript
 ...
@@ -517,7 +547,7 @@ if (positions[headTop / size][headLeft / size] === false)
 Después del bucle y una vez todos los `cube` en su lugar correspondiente obtenemos las coordenadas del head de tipo _number_ y ahora con los IFs posteriores verificamos si la head salió de nuestro tablero. En el caso de que el `top` o `left` sea menor a 0 o si su valor es mayor a `700` - `35`, porque ese es la última celda que puede ocupar un cubo en el final del ancho y de altura. Si fuera solo `700` eso le habilitaría al snake mover una celda más fuera del tablero y no queremos eso.
 También podés ver en el útlimo if que pregunto si en `positions`, las coordenadas del `head` están en _false_. Recordá que inicializamos las coordenadas de nuestras dos celdas primeras en _false_ para identificar que esa posición está ocupada, por lo que si en algún momento del juego la `head` se cruza con una posición en _false_, significa que se comió así misma y por lo tanto murió!!!
 
-En el caso de que se cumpla las condiciones, paran la ejecución con _return_ y llaman a la función **_gameOver_** pasándole la variable interval que contiene el cuerpo del setInterval. Veremos que hace **_gameOver_** más adelante.
+En el caso de que se cumpla las condiciones, paran la ejecución con _return_ y llaman a la función **_gameOver_**. Veremos que hace más adelante.
 
 ```javascript
 positions[headTop / size][headLeft / size] = false;
@@ -530,7 +560,7 @@ positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft}`;
 
 Genial!! Ya cubrimos los dos tipos de colisiones, por el tablero y por el propio cuerpo de la snake ✔️.
 
-Una vez finalizado el bucle hay que deshabilitar una celda en `positions`, la del head, ya que si bien ya comprobamos que en la posición nueva del `head` no estaba en _false_, ahora porque la propia `head` se encuentra allí, debe estarlo. Ahora, si te das cuenta, cada vez que se ejecute la callback del setInterval y se haga este circuito, el `head` se estaría actualizando y estableciendo las `positions` en _false_. Hasta ahí bien, pero qué pasa cuando la cola deja un espacio anteriro, quedaría en _false_... Bueno, es por eso que ves esa línea en la que optengo los valores _number_ de `aux1` y las guardo en dos variables. Recordá que `aux1` al finalizar el bucle va a tener las coordenadas que se le asignó con `aux2`. O sea va a tener las de la cola, pero no la actualizada sino la anterior!!! Perfecto, ahora ya sabemos que `head` se encargará de deshabilitar las posiciones en las que avance y la línea `` positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft} `` se encargará de reestablecer la posición una vez que la cola haya avanzado.
+Una vez finalizado el bucle hay que deshabilitar una celda en `positions`, la del head, ya que si bien ya comprobamos que en la posición nueva del `head` no estaba en _false_, ahora porque la propia `head` se encuentra allí, debe estarlo. Ahora, si te das cuenta, cada vez que se ejecute la función loop (`interval`) y se haga este circuito, el `head` se estaría actualizando y estableciendo las `positions` en _false_. Hasta ahí bien, pero qué pasa cuando la cola deja un espacio anteriro, quedaría en _false_... Bueno, es por eso que ves esa línea en la que optengo los valores _number_ de `aux1` y las guardo en dos variables. Recordá que `aux1` al finalizar el bucle va a tener las coordenadas que se le asignó con `aux2`. O sea va a tener las de la cola, pero no la actualizada sino la anterior!!! Perfecto, ahora ya sabemos que `head` se encargará de deshabilitar las posiciones en las que avance y la línea `` positions[tailTop / size][tailLeft / size] = `${tailTop}-${tailLeft} `` se encargará de reestablecer la posición una vez que la cola haya avanzado.
 
 ```javascript
 //App.js
@@ -631,7 +661,7 @@ return $food;
 
 Ahora que tenemos las coordenadas de nuestra comida la generamos llamando a **_makeLink_**, ya visto anteriormente, y le digo que será de color "blue" para que sea distinto de la snake. Le asignamos el id "food" para que ahora sí la encuentre cuando la busque en el DOM, y no se ejecute todo este bloque del **_checkFood_**. Por último retornamos el elemento, el cual ya sabemos que va a ser appendeado en el `$board`.
 
-OK! Ya creeamos nuestra comida. Pero... dentro de 100ms se volverá a ejecutar la callback del setInterval y, en difinitiva, se volverá a llamar **_checkFood_**. Veamos qué pasa ahora que `$food` no es un valor `null`.
+OK! Ya creeamos nuestra comida. Pero... dentro de 100ms se volverá a ejecutar el loop y, en difinitiva, se volverá a llamar **_checkFood_**. Veamos qué pasa ahora que `$food` no es un valor `null`.
 
 ```javascript
 if ($food.style.top + $food.style.left === `${headTop}px${headLeft}px`) {
@@ -655,7 +685,7 @@ export default function ($board, snake, top, left, size) {
 
 Como verás **_eatFood_** no tiene un código tan complejo. Simplemente crea otro `cube` con **_makeLink_**, le pasamos las coordenadas de la `tail (anterior)`. Ese nuevo `cube` lo pone en el tablero y en el arreglo `snake`.
 
-Por último incrementamos el `score` para ver la acumulación.
+Por último incrementamos el `score` para ver la acumFulación.
 
 ```javascript
 snake.length >= (sizeOfBoard / size) ** 2 - 2 && gameOver(interval, true);
@@ -666,8 +696,7 @@ Ultima parte de la callback!! Este fragmento simplemente está para ver si el ju
 Sabemos que nuestro tablero tiene un `700*700` y cada `cube` de nuestra snake es de `35`. Eso quiere decir que `700 / 35 = 20` por lo que tanto del alto como ancho puede haber una ilera de 20 `cubes`. Ahora hagamos el total que puede haber en el tablero: `20 * 20 = 400`, es decir, pueden haber en total `400 cubes` en el tablero (400 celdas). Yo decidí que no le haré sufrir tanto al jugador y que si le longitud es igual o mayor a 398 pare el juego. Y como estarás viendo, a **_gameOver_** no le paso solo `interval` como en las otras llamadas sino también otro argumento con un valor _true_. Próximamente veremos qué hace.
 
 ```javascript
-const gameOver = (interval, theWinner) => {
-  clearInterval(interval);
+const gameOver = (theWinner) => {
   setPositions(positions, size);
   d.removeEventListener("keydown", chooseDirection);
   snake = [];
@@ -685,7 +714,7 @@ const gameOver = (interval, theWinner) => {
 };
 ```
 
-Veamos qué hace **_gameOver_**. Siempre espera un parámetro que sea `interval` la referencia al intervalo que se está ejecutando. Simplemente con _clearInteval_ hacemos que pare el juego. Seguido de eso, debemos preparar el juego para que se puede reiniciar una nueva partida. Es por eso que primero seteo las posiciones con **_setPositions_** que ya fue vista, remuevo el evento "keydown" con la función **_chooseDirection_** para que no se pueda cambiar `direction` mientras el juego no esté activo, reasigno `snake` a un nuevo arreglo, `direction` de nuevo a RIGHT. Creo un elemento `p` donde le coloco una clase y un texto de "Game Over" junto al score obtenido.
+Debemos preparar el juego para que se puede reiniciar una nueva partida. Es por eso que primero seteo las posiciones con **_setPositions_** que ya fue vista, remuevo el evento "keydown" con la función **_chooseDirection_** para que no se pueda cambiar `direction` mientras el juego no esté activo, reasigno `snake` a un nuevo arreglo, `direction` de nuevo a RIGHT. Creo un elemento `p` donde le coloco una clase y un texto de "Game Over" junto al score obtenido.
 
 Ahora, fijáte que si se envió el _true_ a **_gameOver_** significa que se logró llegar al final, por lo que en ese caso reemplazo el contenido textual del `p` a "YOU'RE GOD" para que nuestor jugador termine satisfecho.
 
